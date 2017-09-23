@@ -1,0 +1,7 @@
+*.prof
+godon/godon
+*.test
+nohup.out
+*.bolt
+.godon_history
+*.log
