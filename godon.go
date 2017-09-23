@@ -48,6 +48,8 @@ func New(options Options) (*Godon, error) {
 		godon.ServerUrl = url
 	}
 
+	godon.AppConfig.RedirectURIs = __REDIRECT_URL_VALUE
+
 	return godon, nil
 }
 
@@ -67,12 +69,13 @@ func (godon *Godon) Register() error {
 func (godon *Godon) Authorize(method func(url string) (string, error)) error {
 	const errMsg = "Authorize failed"
 
-	const responseTypeParam = "response_type=code"
-	const redirectUriParam = "redirect_uri=urn:ietf:wg:oauth:2.0:oob"
-	scopesParam := "scopes=" + godon.AppConfig.Scopes
-	clientIdParam := "client_id=" + godon.App.ClientID
+	query := map[string]string{}
+	query[__RESPONSE_TYPE_KEY] = __RESPONSE_TYPE_VALUE
+	query[__REDIRECT_URL_KEY] = __REDIRECT_URL_VALUE
+	query[__SCOPES_KEY] = godon.AppConfig.Scopes
+	query[__CLIENT_ID_KEY] = godon.App.ClientID
 
-	url := godon.makeGetUrl("/oauth/authorize", scopesParam, responseTypeParam, redirectUriParam, clientIdParam)
+	url := godon.makeGetUrl("/oauth/authorize", query)
 	refreshToken, err := method(url)
 
 	if err != nil {
@@ -83,17 +86,27 @@ func (godon *Godon) Authorize(method func(url string) (string, error)) error {
 	return nil
 }
 
-func (godon *Godon) makeGetUrl(path string, params ...string) string {
-	var getUrl *url.URL
+func (godon *Godon) makeGetUrl(path string, query map[string]string) string {
+	getUrl := &url.URL{}
 	*getUrl = *godon.ServerUrl
 	getUrl.Path = path
 
-	encodedParams := make([]string, len(params))
+	queryList := make([]string, len(query))
 
-	for i, p := range params {
-		encodedParams[i] = url.QueryEscape(p)
+	i := 0
+	for k, q := range query {
+		queryList[i] = k + "=" + url.QueryEscape(q)
+		i++
 	}
-	getUrl.RawQuery = strings.Join(encodedParams, "&")
+
+	getUrl.RawQuery = strings.Join(queryList, "&")
 
 	return getUrl.String()
 }
+
+const __REDIRECT_URL_VALUE = "urn:ietf:wg:oauth:2.0:oob"
+const __REDIRECT_URL_KEY = "redirect_uri"
+const __SCOPES_KEY = "scopes"
+const __CLIENT_ID_KEY = "client_id"
+const __RESPONSE_TYPE_KEY = "response_type"
+const __RESPONSE_TYPE_VALUE = "code"

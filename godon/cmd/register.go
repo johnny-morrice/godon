@@ -40,42 +40,73 @@ var registerCmd = &cobra.Command{
 	Use:   "register",
 	Short: "Register godon with your server",
 	Run: func(cmd *cobra.Command, args []string) {
-		loadRegisterParameters(registerCmdParams)
+		loadViperConfig(registerCmdParams)
 
-		appConfig := &mastodon.AppConfig{
-			ClientName: *registerCmdParams.String(__CLIENT_NAME_FLAG),
-			Server:     *registerCmdParams.String(__SERVER_FLAG),
-		}
-		options := godon.Options{
-			AppConfig: appConfig,
-		}
+		godon := makeGodon(registerCmdParams)
 
-		godon, err := godon.New(options)
+		err := godon.Register()
 
 		if err != nil {
 			die(err)
 		}
 
-		err = godon.Register()
-
-		if err != nil {
-			die(err)
-		}
-
-		configFile := createConfigFile(registerCmdParams)
-		defer configFile.Close()
-		err = writeJsonConfig(godon, configFile)
-
-		if err != nil {
-			die(err)
-		}
+		saveConfig(godon, registerCmdParams)
 	},
 }
 
-func loadRegisterParameters(params *Parameters) {
-	serverP := params.String(__SERVER_FLAG)
-	if *serverP == "" {
-		*serverP = viper.GetString(__SERVER_FLAG)
+func loadViperConfig(params *Parameters) {
+	stringFlags := []string{
+		__SERVER_FLAG,
+		__CLIENT_NAME_FLAG,
+		__CLIENT_ID_FLAG,
+		__CLIENT_SECRET_FLAG,
+	}
+
+	for _, flag := range stringFlags {
+		loadViperString(flag, params)
+	}
+}
+
+func loadViperString(flag string, params *Parameters) {
+	flagP := params.String(flag)
+	if *flagP == "" {
+		*flagP = viper.GetString(flag)
+	}
+}
+
+func makeGodon(params *Parameters) *godon.Godon {
+	appConfig := &mastodon.AppConfig{
+		ClientName: *params.String(__CLIENT_NAME_FLAG),
+		Server:     *params.String(__SERVER_FLAG),
+		Scopes:     __SCOPES,
+	}
+
+	app := &mastodon.Application{
+		ClientID:     *params.String(__CLIENT_ID_FLAG),
+		ClientSecret: *params.String(__CLIENT_SECRET_FLAG),
+	}
+
+	options := godon.Options{
+		AppConfig: appConfig,
+		App:       app,
+	}
+
+	godon, err := godon.New(options)
+
+	if err != nil {
+		die(err)
+	}
+
+	return godon
+}
+
+func saveConfig(godon *godon.Godon, params *Parameters) {
+	configFile := createConfigFile(params)
+	defer configFile.Close()
+	err := writeJsonConfig(godon, configFile)
+
+	if err != nil {
+		die(err)
 	}
 }
 
@@ -127,9 +158,15 @@ var registerCmdParams *Parameters = &Parameters{}
 func init() {
 	RootCmd.AddCommand(registerCmd)
 
-	registerCmd.Flags().StringVar(registerCmdParams.String(__SERVER_FLAG), __SERVER_FLAG, __DEFAULT_SERVER, __SERVER_FLAG_USAGE)
-	registerCmd.Flags().StringVar(registerCmdParams.String(__CLIENT_NAME_FLAG), __CLIENT_NAME_FLAG, __DEFAULT_CLIENT_NAME, __CLIENT_FLAG_USAGE)
+	addRegisterParams(registerCmd, registerCmdParams)
 }
+
+func addRegisterParams(cmd *cobra.Command, params *Parameters) {
+	cmd.Flags().StringVar(params.String(__SERVER_FLAG), __SERVER_FLAG, __DEFAULT_SERVER, __SERVER_FLAG_USAGE)
+	cmd.Flags().StringVar(params.String(__CLIENT_NAME_FLAG), __CLIENT_NAME_FLAG, __DEFAULT_CLIENT_NAME, __CLIENT_FLAG_USAGE)
+}
+
+const __SCOPES = "read write follow"
 
 const __SERVER_FLAG = "server"
 const __SERVER_FLAG_USAGE = "Mastodon server"
@@ -137,6 +174,3 @@ const __DEFAULT_SERVER = ""
 const __CLIENT_NAME_FLAG = "client-name"
 const __CLIENT_FLAG_USAGE = "The name of this app"
 const __DEFAULT_CLIENT_NAME = "godon"
-
-const __CLIENT_ID_FLAG = "client-id"
-const __CLIENT_SECRET_FLAG = "client-secret"
