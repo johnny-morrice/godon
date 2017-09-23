@@ -10,7 +10,6 @@ import (
 )
 
 type Options struct {
-	ServerUrl    *url.URL
 	App          *mastodon.Application
 	AppConfig    *mastodon.AppConfig
 	RefreshToken string
@@ -19,6 +18,7 @@ type Options struct {
 
 type Godon struct {
 	Options
+	serverUrl *url.URL
 }
 
 func New(options Options) (*Godon, error) {
@@ -30,23 +30,17 @@ func New(options Options) (*Godon, error) {
 		godon.Context = context.Background()
 	}
 
-	if godon.ServerUrl == nil && godon.AppConfig.Server == "" {
-		return nil, errors.New("ServerUrl missing")
-	}
-
 	if godon.AppConfig.Server == "" {
-		godon.AppConfig.Server = godon.ServerUrl.String()
+		return nil, errors.New("Server URL missing")
 	}
 
-	if godon.ServerUrl == nil && godon.AppConfig.Server != "" {
-		url, err := url.Parse(godon.AppConfig.Server)
+	url, err := url.Parse(godon.AppConfig.Server)
 
-		if err != nil {
-			return nil, err
-		}
-
-		godon.ServerUrl = url
+	if err != nil {
+		return nil, err
 	}
+
+	godon.serverUrl = url
 
 	godon.AppConfig.RedirectURIs = __REDIRECT_URL_VALUE
 
@@ -88,7 +82,7 @@ func (godon *Godon) Authorize(method func(url string) (string, error)) error {
 
 func (godon *Godon) makeGetUrl(path string, query map[string]string) string {
 	getUrl := &url.URL{}
-	*getUrl = *godon.ServerUrl
+	*getUrl = *godon.serverUrl
 	getUrl.Path = path
 
 	queryList := make([]string, len(query))
