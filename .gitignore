@@ -5,3 +5,4 @@ nohup.out
 *.bolt
 .godon_history
 *.log
+.godon.json
