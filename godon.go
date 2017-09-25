@@ -13,12 +13,14 @@ type Options struct {
 	App          *mastodon.Application
 	AppConfig    *mastodon.AppConfig
 	RefreshToken string
+	AccessToken  string
 	Context      context.Context
 }
 
 type Godon struct {
 	Options
 	serverUrl *url.URL
+	client    *mastodon.Client
 }
 
 func New(options Options) (*Godon, error) {
@@ -60,7 +62,9 @@ func (godon *Godon) Register() error {
 	return nil
 }
 
-func (godon *Godon) Authorize(method func(url string) (string, error)) error {
+type AuthorizationMethod func(url string) (string, error)
+
+func (godon *Godon) Authorize(method AuthorizationMethod) error {
 	const errMsg = "Authorize failed"
 
 	query := map[string]string{}
@@ -98,12 +102,57 @@ func (godon *Godon) makeGetUrl(path string, query map[string]string) string {
 	return getUrl.String()
 }
 
-func (godon *Godon) OauthLogin() error {
-	panic("not implemented")
+func (godon *Godon) OauthLogin(method AuthorizationMethod) error {
+	const errMsg = "godon.OauthLogin failed"
+
+	err := godon.Register()
+
+	if err != nil {
+		return errors.Wrap(err, errMsg)
+	}
+
+	err = godon.Authorize(method)
+
+	if err != nil {
+		return errors.Wrap(err, errMsg)
+	}
+
+	err = godon.AccessMastodon()
+
+	if err != nil {
+		return errors.Wrap(err, errMsg)
+	}
+
+	config := godon.makeMastodonConfig()
+	godon.client = mastodon.NewClient(config)
+
+	return nil
 }
 
-func (godon *Godon) PostStatus(text string) error {
-	panic("not implemented")
+// AccessMastodon fetches an access token and stores within godon.
+func (godon *Godon) AccessMastodon() error {
+	mastodon.
+}
+
+func (godon *Godon) makeMastodonConfig() *mastodon.Config {
+	return &mastodon.Config{
+		Server:       godon.AppConfig.Server,
+		ClientID:     godon.App.ClientID,
+		ClientSecret: godon.App.ClientSecret,
+		AccessToken:  godon.AccessToken,
+	}
+}
+
+// TODO should take toot as parameter.
+func (godon *Godon) PostStatus(statusText string) error {
+	toot := &mastodon.Toot{
+		Status: statusText,
+	}
+
+	// TODO figure out who should get the returned status.
+	_, err := godon.client.PostStatus(godon.Context, toot)
+
+	return err
 }
 
 const __REDIRECT_URL_VALUE = "urn:ietf:wg:oauth:2.0:oob"
