@@ -30,10 +30,10 @@ var statusPostCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loadViperConfig(statusPostCmdParams)
 
-		godon := makeGodon(authorizeCmdParams)
+		godon := makeGodon(statusPostCmdParams)
 		defer saveConfig(godon, statusPostCmdParams)
 
-		err := godon.OauthLogin()
+		err := godon.OAuthLogin(userFindsToken)
 
 		if err != nil {
 			die(err)

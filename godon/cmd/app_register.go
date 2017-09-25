@@ -23,11 +23,11 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
 
-	"github.com/mattn/go-mastodon"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -45,11 +45,7 @@ var registerCmd = &cobra.Command{
 		godon := makeGodon(registerCmdParams)
 		defer saveConfig(godon, registerCmdParams)
 
-		err := godon.Register()
-
-		if err != nil {
-			die(err)
-		}
+		panic("not implemented")
 	},
 }
 
@@ -74,22 +70,7 @@ func loadViperString(flag string, params *Parameters) {
 }
 
 func makeGodon(params *Parameters) *godon.Godon {
-	appConfig := &mastodon.AppConfig{
-		ClientName: *params.String(__CLIENT_NAME_FLAG),
-		Server:     *params.String(__SERVER_FLAG),
-		Scopes:     __SCOPES,
-	}
-
-	app := &mastodon.Application{
-		ClientID:     *params.String(__CLIENT_ID_FLAG),
-		ClientSecret: *params.String(__CLIENT_SECRET_FLAG),
-	}
-
-	options := godon.Options{
-		AppConfig: appConfig,
-		App:       app,
-	}
-
+	options := godon.Options{}
 	godon, err := godon.New(options)
 
 	if err != nil {
@@ -125,10 +106,6 @@ func die(err error) {
 
 func writeJsonConfig(godon *godon.Godon, w io.Writer) error {
 	contents := map[string]interface{}{}
-	contents[__SERVER_FLAG] = godon.AppConfig.Server
-	contents[__CLIENT_NAME_FLAG] = godon.AppConfig.ClientName
-	contents[__CLIENT_ID_FLAG] = godon.App.ClientID
-	contents[__CLIENT_SECRET_FLAG] = godon.App.ClientSecret
 
 	bs, err := json.MarshalIndent(contents, "", "  ")
 
@@ -152,6 +129,13 @@ func writeJsonConfig(godon *godon.Godon, w io.Writer) error {
 	return nil
 }
 
+func userFindsToken(url string) (string, error) {
+	fmt.Printf("Visit %s then enter the token:\n", url)
+	var token string
+	_, err := fmt.Scan(&token)
+	return token, err
+}
+
 var registerCmdParams *Parameters = &Parameters{}
 
 func init() {
@@ -163,7 +147,16 @@ func init() {
 func addRegisterParams(cmd *cobra.Command, params *Parameters) {
 	cmd.Flags().StringVar(params.String(__SERVER_FLAG), __SERVER_FLAG, __DEFAULT_SERVER, __SERVER_FLAG_USAGE)
 	cmd.Flags().StringVar(params.String(__CLIENT_NAME_FLAG), __CLIENT_NAME_FLAG, __DEFAULT_CLIENT_NAME, __CLIENT_FLAG_USAGE)
+	cmd.Flags().StringVar(params.String(__CLIENT_ID_FLAG), __CLIENT_ID_FLAG, __DEFAULT_CLIENT_ID, __CLIENT_ID_FLAG_USAGE)
+	cmd.Flags().StringVar(params.String(__CLIENT_SECRET_FLAG), __CLIENT_SECRET_FLAG, __DEFAULT_CLIENT_SECRET, __CLIENT_SECRET_FLAG_USAGE)
 }
+
+const __CLIENT_ID_FLAG = "client-id"
+const __CLIENT_ID_FLAG_USAGE = "Mastadon app ID"
+const __DEFAULT_CLIENT_ID = ""
+const __CLIENT_SECRET_FLAG = "client-secret"
+const __CLIENT_SECRET_FLAG_USAGE = "Mastadon app secret"
+const __DEFAULT_CLIENT_SECRET = ""
 
 const __SCOPES = "read write follow"
 
