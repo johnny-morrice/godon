@@ -55,7 +55,7 @@ func userFindsToken(url string) (string, error) {
 var authorizeCmdParams *Parameters = &Parameters{}
 
 func init() {
-	RootCmd.AddCommand(authorizeCmd)
+	appCmd.AddCommand(authorizeCmd)
 
 	addRegisterParams(authorizeCmd, authorizeCmdParams)
 	addAuthorizeParams(authorizeCmd, authorizeCmdParams)

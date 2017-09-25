@@ -155,7 +155,7 @@ func writeJsonConfig(godon *godon.Godon, w io.Writer) error {
 var registerCmdParams *Parameters = &Parameters{}
 
 func init() {
-	RootCmd.AddCommand(registerCmd)
+	appCmd.AddCommand(registerCmd)
 
 	addRegisterParams(registerCmd, registerCmdParams)
 }

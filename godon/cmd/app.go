@@ -24,12 +24,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// statusCmd represents the status command
-var statusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Mastodon status control",
+// appCmd represents the app command
+var appCmd = &cobra.Command{
+	Use:   "app",
+	Short: "Mastodon app control",
 }
 
 func init() {
-	RootCmd.AddCommand(statusCmd)
+	RootCmd.AddCommand(appCmd)
 }
