@@ -22,6 +22,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/johnny-morrice/godon"
 )
 
 var statusPostCmd = &cobra.Command{
@@ -30,10 +32,10 @@ var statusPostCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loadViperConfig(statusPostCmdParams)
 
-		godon := makeGodon(statusPostCmdParams)
-		defer saveConfig(godon, statusPostCmdParams)
+		g := makeGodon(statusPostCmdParams)
+		defer saveConfig(g, statusPostCmdParams)
 
-		err := godon.OAuthLogin(userFindsToken)
+		err := g.Login(userFindsToken)
 
 		if err != nil {
 			die(err)
@@ -41,7 +43,10 @@ var statusPostCmd = &cobra.Command{
 
 		message := *statusPostCmdParams.String(__STATUS_MESSAGE_FLAG)
 
-		err = godon.PostStatus(message)
+		toot := godon.Toot{
+			Status: message,
+		}
+		err = g.PostStatus(toot)
 
 		if err != nil {
 			die(err)
