@@ -44,6 +44,32 @@ func (godon *Godon) Login(method AuthorizationMethod) error {
 	return nil
 }
 
+func (godon *Godon) GetTimeline(timeline string, local bool, limit int) ([]madon.Status, error) {
+	const errMsg = "godon.GetTimeline failed"
+
+	lopt := &madon.LimitParams{}
+
+	if limit < 0 {
+		lopt.All = true
+	} else {
+		lopt.Limit = limit
+	}
+
+	updates, err := godon.client.GetTimelines(timeline, local, lopt)
+
+	if err != nil {
+		return nil, errors.Wrap(err, errMsg)
+	}
+
+	return updates, nil
+}
+
+// TODO this is a terminal drawing method so we should think of introducing more
+// structure at this point.
+func (godon *Godon) DrawTimeline(updates []madon.Status) error {
+	panic("not implemented")
+}
+
 func (godon *Godon) authorize(method AuthorizationMethod) error {
 	url, err := godon.client.LoginOAuth2("", __SCOPES)
 

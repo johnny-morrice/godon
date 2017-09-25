@@ -173,6 +173,7 @@ func init() {
 	addRegisterParams(registerCmd, registerCmdParams)
 }
 
+// TODO these should be in the root command.
 func addRegisterParams(cmd *cobra.Command, params *Parameters) {
 	cmd.Flags().StringVar(params.String(__SERVER_FLAG), __SERVER_FLAG, __DEFAULT_SERVER, __SERVER_FLAG_USAGE)
 	cmd.Flags().StringVar(params.String(__CLIENT_NAME_FLAG), __CLIENT_NAME_FLAG, __DEFAULT_CLIENT_NAME, __CLIENT_FLAG_USAGE)
