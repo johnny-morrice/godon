@@ -46,6 +46,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	// TODO default config file should be in $HOME.
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", ".godon.json", "config file (default is .godon.json)")
 }
 
