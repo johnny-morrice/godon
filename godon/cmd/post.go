@@ -31,6 +31,8 @@ var statusPostCmd = &cobra.Command{
 		loadViperConfig(statusPostCmdParams)
 
 		godon := makeGodon(authorizeCmdParams)
+		defer saveConfig(godon, statusPostCmdParams)
+
 		err := godon.OauthLogin()
 
 		if err != nil {
@@ -44,6 +46,7 @@ var statusPostCmd = &cobra.Command{
 		if err != nil {
 			die(err)
 		}
+
 	},
 }
 

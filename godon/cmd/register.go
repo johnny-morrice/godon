@@ -43,14 +43,13 @@ var registerCmd = &cobra.Command{
 		loadViperConfig(registerCmdParams)
 
 		godon := makeGodon(registerCmdParams)
+		defer saveConfig(godon, registerCmdParams)
 
 		err := godon.Register()
 
 		if err != nil {
 			die(err)
 		}
-
-		saveConfig(godon, registerCmdParams)
 	},
 }
 

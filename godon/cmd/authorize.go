@@ -35,14 +35,13 @@ var authorizeCmd = &cobra.Command{
 		loadViperConfig(authorizeCmdParams)
 
 		godon := makeGodon(authorizeCmdParams)
+		defer saveConfig(godon, authorizeCmdParams)
 
 		err := godon.Authorize(userFindsToken)
 
 		if err != nil {
 			die(err)
 		}
-
-		saveConfig(godon, authorizeCmdParams)
 	},
 }
 
