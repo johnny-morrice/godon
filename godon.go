@@ -32,16 +32,10 @@ func (godon *Godon) Login(method AuthorizationMethod) error {
 
 	var err error
 	if godon.Token.AccessToken == "" {
-		err = godon.register()
+		err = godon.register(method)
 	} else {
 		err = godon.restore()
 	}
-
-	if err != nil {
-		return errors.Wrap(err, errMsg)
-	}
-
-	err = godon.authorize(method)
 
 	if err != nil {
 		return errors.Wrap(err, errMsg)
@@ -68,7 +62,7 @@ func (godon *Godon) authorize(method AuthorizationMethod) error {
 	return err
 }
 
-func (godon *Godon) register() error {
+func (godon *Godon) register(method AuthorizationMethod) error {
 	const errMsg = "godon.register failed"
 
 	client, err := madon.NewApp(godon.AppName, godon.WebSite, __SCOPES, __REDIRECT_URL, godon.InstanceName)
@@ -78,6 +72,13 @@ func (godon *Godon) register() error {
 	}
 
 	godon.client = client
+
+	err = godon.authorize(method)
+
+	if err != nil {
+		return errors.Wrap(err, errMsg)
+	}
+
 	return nil
 }
 
