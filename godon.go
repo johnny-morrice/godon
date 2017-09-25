@@ -98,6 +98,14 @@ func (godon *Godon) makeGetUrl(path string, query map[string]string) string {
 	return getUrl.String()
 }
 
+func (godon *Godon) OauthLogin() error {
+	panic("not implemented")
+}
+
+func (godon *Godon) PostStatus(text string) error {
+	panic("not implemented")
+}
+
 const __REDIRECT_URL_VALUE = "urn:ietf:wg:oauth:2.0:oob"
 const __REDIRECT_URL_KEY = "redirect_uri"
 const __SCOPES_KEY = "scopes"
