@@ -60,8 +60,9 @@ func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) 
 		Timeline: timeline,
 	}
 
-	publicTimelineResource := godon.Resource{
+	resource := godon.Resource{
 		Name:     timelineName,
+		Style:    godon.Feed,
 		Bufferer: widget,
 	}
 
@@ -69,15 +70,14 @@ func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) 
 		Client: client,
 	}
 
-	err := term.AddResource(publicTimelineResource)
+	err := term.AddResource(resource)
 
 	if err != nil {
 		die(err)
 	}
 
-	showTimeline := godon.Command{
-		OpCode:     godon.ShowWidget,
-		Parameters: []string{timelineName},
+	showTimeline := godon.ShowWidget{
+		Resource: timelineName,
 	}
 
 	stopper := term.Render()

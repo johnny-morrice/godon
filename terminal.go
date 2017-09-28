@@ -1,40 +1,73 @@
 package godon
 
 import (
-	"github.com/gizak/termui"
+	"fmt"
+
+	ui "github.com/gizak/termui"
 )
 
 type Terminal struct {
-	Client *Client
+	Client    *Client
+	Body      *ui.Grid
+	resources map[string]Resource
 }
 
 func (term Terminal) Render() Stopper {
+	// FIXME returns error
+	ui.Init()
+
+	term.Body = ui.Body
+
 	panic("not implemented")
 }
 
 func (term Terminal) AddResource(resource Resource) error {
+	_, present := term.resources[resource.Name]
+
+	if present {
+		return fmt.Errorf("Duplicate resource name: %s", resource.Name)
+	}
+
+	term.resources[resource.Name] = resource
+	return nil
+}
+
+type ShowWidget struct {
+	Resource string
+}
+
+func (show ShowWidget) Execute(term Terminal) error {
 	panic("not implemented")
 }
 
-type CommandOpCode uint16
+type HideWidget struct {
+	Resource string
+}
 
-const (
-	ShowWidget = iota
-	HideWidget
-)
+func (hide HideWidget) Execute(term Terminal) error {
+	panic("not implemented")
+}
 
-type Command struct {
-	OpCode     CommandOpCode
-	Parameters []string
+type Command interface {
+	Execute(term Terminal) error
 }
 
 func (term Terminal) ExecuteCommand(cmd Command) error {
 	panic("not implemented")
 }
 
+type Style uint16
+
+const (
+	Feed = iota
+	Profile
+	Input
+)
+
 type Resource struct {
 	Name     string
-	Bufferer termui.GridBufferer
+	Style    Style
+	Bufferer ui.GridBufferer
 }
 
 type Stopper struct {
@@ -51,7 +84,7 @@ func (stopper Stopper) Wait() error {
 }
 
 type TimelineWidget struct {
-	termui.Block
+	ui.Block
 	Limit    int
 	Local    bool
 	Timeline string
