@@ -21,8 +21,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/johnny-morrice/godon"
@@ -30,7 +28,7 @@ import (
 
 // timelineStreamCmd represents the timeline_get command
 var timelineStreamCmd = &cobra.Command{
-	Use:   "get",
+	Use:   "stream",
 	Short: "Display a timeline",
 	Run: func(cmd *cobra.Command, args []string) {
 		loadViperConfig(timelineStreamCmdParams)
@@ -49,6 +47,8 @@ var timelineStreamCmd = &cobra.Command{
 }
 
 func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) {
+	const timelineName = "SingleTimeline"
+
 	params = params.Merge(timelineCmdParams)
 	timeline := *params.String(__TIMELINE_FLAG)
 	limit := *params.Int(__TIMELINE_GET_LIMIT_FLAG)
@@ -60,13 +60,35 @@ func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) 
 		Timeline: timeline,
 	}
 
-	panic(fmt.Sprintf("What do I do with the widget? %v", widget))
+	publicTimelineResource := godon.Resource{
+		Name:     timelineName,
+		Bufferer: widget,
+	}
 
 	term := &godon.Terminal{
 		Client: client,
 	}
 
-	err := term.Render()
+	err := term.AddResource(publicTimelineResource)
+
+	if err != nil {
+		die(err)
+	}
+
+	showTimeline := godon.Command{
+		OpCode:     godon.ShowWidget,
+		Parameters: []string{timelineName},
+	}
+
+	stopper := term.Render()
+
+	err = term.ExecuteCommand(showTimeline)
+
+	if err != nil {
+		die(err)
+	}
+
+	err = stopper.Wait()
 
 	if err != nil {
 		die(err)
