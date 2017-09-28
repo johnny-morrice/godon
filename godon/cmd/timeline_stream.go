@@ -80,7 +80,7 @@ func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) 
 		Resource: timelineName,
 	}
 
-	stopper := term.Render()
+	stopper := term.Run()
 
 	err = term.ExecuteCommand(showTimeline)
 
@@ -88,7 +88,7 @@ func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) 
 		die(err)
 	}
 
-	err = stopper.Wait()
+	err = stopper.WaitForFailure()
 
 	if err != nil {
 		die(err)

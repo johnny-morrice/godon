@@ -8,17 +8,37 @@ import (
 
 type Terminal struct {
 	Client    *Client
-	Body      *ui.Grid
 	resources map[string]Resource
+	stopper   Stopper
 }
 
-func (term Terminal) Render() Stopper {
-	// FIXME returns error
-	ui.Init()
+func (term Terminal) Run() Stopper {
+	term.stopper = makeStopper()
 
-	term.Body = ui.Body
+	err := ui.Init()
 
-	panic("not implemented")
+	if err != nil {
+		term.fatal(err)
+		return term.stopper
+	}
+
+	go func() {
+		term.stopper.WaitForStop()
+		ui.Close()
+		ui.StopLoop()
+	}()
+
+	go ui.Loop()
+
+	return term.stopper
+}
+
+func (term Terminal) close() {
+	term.stopper.Stop()
+}
+
+func (term Terminal) fatal(err error) {
+	term.stopper.Fail(err)
 }
 
 func (term Terminal) AddResource(resource Resource) error {
@@ -71,15 +91,32 @@ type Resource struct {
 }
 
 type Stopper struct {
-	stopch chan<- struct{}
-	errch  <-chan error
+	stopch chan struct{}
+	errch  chan error
+}
+
+func makeStopper() Stopper {
+	return Stopper{
+		stopch: make(chan struct{}),
+		errch:  make(chan error, 1),
+	}
 }
 
 func (stopper Stopper) Stop() {
-	stopper.stopch <- struct{}{}
+	close(stopper.stopch)
+	close(stopper.errch)
 }
 
-func (stopper Stopper) Wait() error {
+func (stopper Stopper) Fail(err error) {
+	stopper.errch <- err
+	stopper.Stop()
+}
+
+func (stopper Stopper) WaitForStop() {
+	<-stopper.stopch
+}
+
+func (stopper Stopper) WaitForFailure() error {
 	return <-stopper.errch
 }
 
