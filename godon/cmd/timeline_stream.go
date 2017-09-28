@@ -21,6 +21,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/johnny-morrice/godon"
@@ -46,12 +48,29 @@ var timelineStreamCmd = &cobra.Command{
 	},
 }
 
-func drawTimeline(cmd *cobra.Command, params *Parameters, g *godon.Client) {
-	// params = params.Merge(timelineCmdParams)
-	// timeline := *params.String(__TIMELINE_FLAG)
-	// limit := *params.Int(__TIMELINE_GET_LIMIT_FLAG)
-	// local := *params.Bool(__TIMELINE_GET_LOCAL_FLAG)
+func drawTimeline(cmd *cobra.Command, params *Parameters, client *godon.Client) {
+	params = params.Merge(timelineCmdParams)
+	timeline := *params.String(__TIMELINE_FLAG)
+	limit := *params.Int(__TIMELINE_GET_LIMIT_FLAG)
+	local := *params.Bool(__TIMELINE_GET_LOCAL_FLAG)
 
+	widget := &godon.TimelineWidget{
+		Limit:    limit,
+		Local:    local,
+		Timeline: timeline,
+	}
+
+	panic(fmt.Sprintf("What do I do with the widget? %v", widget))
+
+	term := &godon.Terminal{
+		Client: client,
+	}
+
+	err := term.Render()
+
+	if err != nil {
+		die(err)
+	}
 }
 
 var timelineStreamCmdParams *Parameters = &Parameters{}
