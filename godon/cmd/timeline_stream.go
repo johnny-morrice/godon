@@ -26,15 +26,15 @@ import (
 	"github.com/johnny-morrice/godon"
 )
 
-// timelineGetCmd represents the timeline_get command
-var timelineGetCmd = &cobra.Command{
+// timelineStreamCmd represents the timeline_get command
+var timelineStreamCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Display a timeline",
 	Run: func(cmd *cobra.Command, args []string) {
-		loadViperConfig(timelineGetCmdParams)
+		loadViperConfig(timelineStreamCmdParams)
 
-		g := makeGodon(timelineGetCmdParams)
-		defer saveConfig(g, timelineGetCmdParams)
+		g := makeClient(timelineStreamCmdParams)
+		defer saveConfig(g, timelineStreamCmdParams)
 
 		err := g.Login(userFindsToken)
 
@@ -42,39 +42,27 @@ var timelineGetCmd = &cobra.Command{
 			die(err)
 		}
 
-		drawTimeline(cmd, timelineGetCmdParams, g)
+		drawTimeline(cmd, timelineStreamCmdParams, g)
 	},
 }
 
-func drawTimeline(cmd *cobra.Command, params *Parameters, g *godon.Godon) {
-	params = params.Merge(timelineCmdParams)
-	timeline := *params.String(__TIMELINE_FLAG)
-	limit := *params.Int(__TIMELINE_GET_LIMIT_FLAG)
-	local := *params.Bool(__TIMELINE_GET_LOCAL_FLAG)
-
-	statuses, err := g.GetTimeline(timeline, limit, local)
-
-	if err != nil {
-		die(err)
-	}
-
-	err = g.DrawTimeline(statuses)
-
-	if err != nil {
-		die(err)
-	}
+func drawTimeline(cmd *cobra.Command, params *Parameters, g *godon.Client) {
+	// params = params.Merge(timelineCmdParams)
+	// timeline := *params.String(__TIMELINE_FLAG)
+	// limit := *params.Int(__TIMELINE_GET_LIMIT_FLAG)
+	// local := *params.Bool(__TIMELINE_GET_LOCAL_FLAG)
 
 }
 
-var timelineGetCmdParams *Parameters = &Parameters{}
+var timelineStreamCmdParams *Parameters = &Parameters{}
 
 func init() {
-	timelineCmd.AddCommand(timelineGetCmd)
+	timelineCmd.AddCommand(timelineStreamCmd)
 
-	addTimelineGetParams(timelineCmd, timelineGetCmdParams)
+	addTimelineStreamParams(timelineCmd, timelineStreamCmdParams)
 }
 
-func addTimelineGetParams(cmd *cobra.Command, params *Parameters) {
+func addTimelineStreamParams(cmd *cobra.Command, params *Parameters) {
 	cmd.Flags().IntVar(params.Int(__TIMELINE_GET_LIMIT_FLAG), __TIMELINE_GET_LIMIT_FLAG, __DEFAULT_TIMELINE_GET_LIMIT, __TIMELINE_GET_LIMIT_FLAG_USAGE)
 	cmd.Flags().BoolVar(params.Bool(__TIMELINE_GET_LOCAL_FLAG), __TIMELINE_GET_LOCAL_FLAG, __DEFAULT_TIMELINE_GET_LOCAL, __TIMELINE_GET_LOCAL_FLAG_USAGE)
 }

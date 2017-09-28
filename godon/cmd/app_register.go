@@ -44,10 +44,10 @@ var registerCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		loadViperConfig(registerCmdParams)
 
-		godon := makeGodon(registerCmdParams)
-		defer saveConfig(godon, registerCmdParams)
+		client := makeClient(registerCmdParams)
+		defer saveConfig(client, registerCmdParams)
 
-		err := godon.Login(userFindsToken)
+		err := client.Login(userFindsToken)
 
 		if err != nil {
 			die(err)
@@ -70,9 +70,9 @@ func loadViperString(flag string, params *Parameters) {
 	}
 }
 
-func makeGodon(params *Parameters) *godon.Godon {
+func makeClient(params *Parameters) *godon.Client {
 	token := fetchToken(params)
-	options := godon.Options{
+	options := godon.ClientOptions{
 		InstanceName: *params.String(__SERVER_FLAG),
 		AppName:      *params.String(__CLIENT_NAME_FLAG),
 		AppId:        *params.String(__CLIENT_ID_FLAG),
@@ -80,7 +80,7 @@ func makeGodon(params *Parameters) *godon.Godon {
 		WebSite:      *params.String(__WEBSITE_FLAG),
 		Token:        token,
 	}
-	return godon.New(options)
+	return godon.MakeClient(options)
 }
 
 func fetchToken(params *Parameters) *madon.UserToken {
@@ -104,10 +104,10 @@ func fetchToken(params *Parameters) *madon.UserToken {
 	}
 }
 
-func saveConfig(godon *godon.Godon, params *Parameters) {
+func saveConfig(client *godon.Client, params *Parameters) {
 	configFile := createConfigFile(params)
 	defer configFile.Close()
-	err := writeJsonConfig(godon, configFile)
+	err := writeJsonConfig(client, configFile)
 
 	if err != nil {
 		die(err)
@@ -128,11 +128,11 @@ func die(err error) {
 	log.Fatalf("Uncaught error: %s", err.Error())
 }
 
-func writeJsonConfig(godon *godon.Godon, w io.Writer) error {
+func writeJsonConfig(client *godon.Client, w io.Writer) error {
 	contents := map[string]string{}
 
 	for flag, getter := range configFlags {
-		value := getter(godon)
+		value := getter(client)
 		contents[flag] = value
 	}
 
@@ -203,15 +203,15 @@ const __CLIENT_NAME_FLAG = "client-name"
 const __CLIENT_FLAG_USAGE = "The name of this app"
 const __DEFAULT_CLIENT_NAME = "godon"
 
-var configFlags map[string]func(*godon.Godon) string = map[string]func(*godon.Godon) string{
-	__SERVER_FLAG:        func(g *godon.Godon) string { return g.InstanceName },
-	__CLIENT_NAME_FLAG:   func(g *godon.Godon) string { return g.AppName },
-	__CLIENT_ID_FLAG:     func(g *godon.Godon) string { return g.GetAppId() },
-	__CLIENT_SECRET_FLAG: func(g *godon.Godon) string { return g.GetAppSecret() },
-	__WEBSITE_FLAG:       func(g *godon.Godon) string { return g.WebSite },
-	__ACCESS_TOKEN_FLAG:  func(g *godon.Godon) string { return g.GetAccessToken().AccessToken },
+var configFlags map[string]func(*godon.Client) string = map[string]func(*godon.Client) string{
+	__SERVER_FLAG:        func(g *godon.Client) string { return g.InstanceName },
+	__CLIENT_NAME_FLAG:   func(g *godon.Client) string { return g.AppName },
+	__CLIENT_ID_FLAG:     func(g *godon.Client) string { return g.GetAppId() },
+	__CLIENT_SECRET_FLAG: func(g *godon.Client) string { return g.GetAppSecret() },
+	__WEBSITE_FLAG:       func(g *godon.Client) string { return g.WebSite },
+	__ACCESS_TOKEN_FLAG:  func(g *godon.Client) string { return g.GetAccessToken().AccessToken },
 	// TODO created at is an int64 not a string
-	__TOKEN_CREATED_AT_FLAG: func(g *godon.Godon) string { return fmt.Sprint(g.GetAccessToken().CreatedAt) },
-	__TOKEN_SCOPE_FLAG:      func(g *godon.Godon) string { return g.GetAccessToken().Scope },
-	__TOKEN_TYPE_FLAG:       func(g *godon.Godon) string { return g.GetAccessToken().TokenType },
+	__TOKEN_CREATED_AT_FLAG: func(g *godon.Client) string { return fmt.Sprint(g.GetAccessToken().CreatedAt) },
+	__TOKEN_SCOPE_FLAG:      func(g *godon.Client) string { return g.GetAccessToken().Scope },
+	__TOKEN_TYPE_FLAG:       func(g *godon.Client) string { return g.GetAccessToken().TokenType },
 }
